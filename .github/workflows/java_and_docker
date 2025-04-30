@@ -1,0 +1,43 @@
+name: Build and Run Docker Container
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Display Java Version
+        run: java -version
+
+      - name: Build Java application
+        run: |
+          ./mvnw clean package
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: petclinic:latest
+
+      - name: Run the Docker container
+        run: |
+          docker run -d --name petclinic-container -p 8080:8080 petclinic:latest
+
+      - name: Wait for application to start
+        run: sleep 30
+
+      - name: Check application response
+        run: curl -v http://localhost:8080
